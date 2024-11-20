@@ -1,0 +1,45 @@
+version: "3.8"
+services:
+  user-service:
+    build:
+      context: ./user-service
+    ports:
+      - "5001:5001"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/user_service
+    depends_on:
+      - mongodb
+    networks:
+      - backend
+
+  news-service:
+    build:
+      context: ./news-service
+    ports:
+      - "5002:5002"
+    environment:
+      - NEWS_API_KEY=your_news_api_key
+    depends_on:
+      - redis
+    networks:
+      - backend
+
+  mongodb:
+    image: mongo:5.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    networks:
+      - backend
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
