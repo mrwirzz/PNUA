@@ -2,7 +2,7 @@ import requests
 import json
 from datetime import datetime
 
-# Ваш API-ключ для News API
+# API-ключ для News API
 API_KEY = "5c3c06bd99e74f35ac4773351c12bffe"
 API_URL = "https://newsapi.org/v2/everything"  # Это URL для API News API
 

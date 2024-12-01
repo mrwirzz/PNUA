@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   user-service:
     build:
@@ -24,11 +23,26 @@ services:
     networks:
       - backend
 
+  notification-service:
+    build:
+      context: ./notification-service
+    ports:
+      - "5003:5003"
+    environment:
+      - NOTIFICATION_CHANNEL=your_notification_channel
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    networks:
+      - backend
+
   mongodb:
     image: mongo:5.0
     container_name: mongodb
     ports:
       - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db  # volume для сохранения данных
     networks:
       - backend
 
@@ -37,8 +51,26 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+    volumes:
+      - redis-data:/data  # volume для сохранения данных
     networks:
       - backend
+
+  dapr:
+    image: daprio/dapr
+    container_name: dapr
+    command: dapr run --app-id app-name --app-port 5001 --dapr-http-port 3500 --dapr-grpc-port 50001
+    networks:
+      - backend
+    depends_on:
+      - user-service
+      - news-service
+
+volumes:
+  mongodb-data:
+    driver: local
+  redis-data:
+    driver: local
 
 networks:
   backend:
