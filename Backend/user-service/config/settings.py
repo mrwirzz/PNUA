@@ -3,6 +3,6 @@ class Config:
     TESTING = False
     MONGODB_SETTINGS = {
         "db": "user_service_db",
-        "host": "localhost",
+        "host": "mongodb",  # Имя контейнера
         "port": 27017
     }
