@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
-from component_manager import DaprComponentManager
+from component_manager.component_manager import DaprComponentManager
+
 
 app = Flask(__name__)
 dapr_manager = DaprComponentManager()
