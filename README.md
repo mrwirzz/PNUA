@@ -1,4 +1,4 @@
-Project currently in development, stay tuned!
+Project currently in development, stay tuned! Didnt have much time to finish it, but im in process!
 
 News Aggregator
 
@@ -21,8 +21,6 @@ MongoDB
 Google Gmail API
 
 Structure:
-Component-manager
-        |
-    ____|______
-     |        |
-news-service  user-service
+1)Component-manager
+2)news-service
+3)user-service
