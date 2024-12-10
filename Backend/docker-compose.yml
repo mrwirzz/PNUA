@@ -1,7 +1,8 @@
 services:
   user-service:
     build:
-      dockerfile: user-service/Dockerfile
+       context: ./user-service
+       dockerfile: Dockerfile
     volumes:
       - ./component-manager:/app/component-manager
     ports:
@@ -16,7 +17,8 @@ services:
 
   news-service:
     build:
-      dockerfile: news-service/Dockerfile
+      context: ./news-service
+      dockerfile: Dockerfile
     volumes:
       - ./component-manager:/app/component-manager
     ports:
@@ -51,7 +53,8 @@ services:
 
   component-manager:
     build:
-      dockerfile: component-manager/Dockerfile
+      context: ./component-manager
+      dockerfile: Dockerfile
     volumes:
       - ./component-manager:/app/component-manager
     container_name: component-manager

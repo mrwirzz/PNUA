@@ -1,12 +1,11 @@
-FROM python:3.9-slim
+FROM python:3.12-slim
 
-# Установка рабочей директории
 WORKDIR /news-service
-COPY requirements.txt ./
-
-RUN pip install -r requirements.txt
 
 COPY . .
 
+RUN pip install -r requirements.txt
+
 EXPOSE 8085
+
 CMD [ "python", "app.py" ]
