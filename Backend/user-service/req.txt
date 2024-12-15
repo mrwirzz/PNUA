@@ -1,1 +1,0 @@
-pip install flask flask-pymongo flask-restful python-dotenv dapr dapr-ext-grpc

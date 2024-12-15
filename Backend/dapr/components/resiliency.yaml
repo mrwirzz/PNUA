@@ -1,0 +1,32 @@
+apiVersion: dapr.io/v1alpha1
+kind: Resiliency
+metadata:
+  name: rabbitmq-binding-retry
+  namespace: default
+spec:
+  policies:
+    retries:
+      no-retry:
+        policy: constant
+        backoffDuration: "0s"
+        maxRetries: 0
+      limited-retry:
+        policy: exponential
+        backoffDuration: "200ms"
+        maxRetries: 3
+  targets:
+    components:
+      news_request_queue:
+        retries: no-retry
+      news_collector:
+        retries: no-retry
+      message_handler:
+        retries: no-retry
+      ai_summarizer:
+        retries: no-retry
+      news_manager:
+        retries: no-retry
+      user_manager:
+        retries: no-retry
+
+

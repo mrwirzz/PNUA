@@ -1,0 +1,17 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: news_request_queue  # This name is referenced in application code
+  namespace: default
+spec:
+  type: bindings.rabbitmq
+  version: v1
+  metadata:
+  - name: host
+    value: "amqp://rabbitmq:5672"
+  - name: queueName
+    value: "news_request_queue"
+  - name: durable
+    value: "false"
+  # - name: autoAck
+  #   value: "true"

@@ -4,7 +4,7 @@ services:
        context: ./user-service
        dockerfile: Dockerfile
     volumes:
-      - ./component-manager:/app/component-manager
+      - ./manager:/app/component_manager
     ports:
       - "5001:5001"
     environment:
@@ -20,7 +20,7 @@ services:
       context: ./news-service
       dockerfile: Dockerfile
     volumes:
-      - ./component-manager:/app/component-manager
+      - ./manager:/app/component_manager
     ports:
       - "5002:5002"
     environment:
@@ -51,13 +51,13 @@ services:
     networks:
       - backend
 
-  component-manager:
+  manager:
     build:
-      context: ./component-manager
+      context: ./manager
       dockerfile: Dockerfile
     volumes:
-      - ./component-manager:/app/component-manager
-    container_name: component-manager
+      - ./manager:/app/component_manager
+    container_name: manager
     ports:
       - "5000:5000"
     depends_on:
