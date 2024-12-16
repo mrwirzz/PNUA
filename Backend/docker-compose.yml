@@ -1,32 +1,30 @@
 services:
-  user-service:
+  user-manager:
     build:
-       context: ./user-service
+       context: ./managers/user
        dockerfile: Dockerfile
     volumes:
-      - ./manager:/app/component_manager
+      - ./managers:/app/managers/user
     ports:
-      - "5001:5001"
+      - "8080:8080"
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/user_service
+      - MONGO_URI=mongodb://mongodb:27017/users_db
     depends_on:
       - mongodb
     networks:
       - backend
     command: ["python", "app.py"]
 
-  news-service:
+  news-manager:
     build:
-      context: ./news-service
+      context: ./managers/news
       dockerfile: Dockerfile
     volumes:
-      - ./manager:/app/component_manager
+      - ./managers:/app/managers/news
     ports:
-      - "5002:5002"
+      - "8081:8081"
     environment:
-      - NEWS_API_KEY=your_news_api_key
-    depends_on:
-      - redis
+      - NEWS_API_KEY={NEWS_API_KEY}
     networks:
       - backend
     command: ["python", "app.py"]
@@ -37,37 +35,150 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongodb-data:/data/db
+      - mongodb-data:/data/db  # Assuming data directory is /data/db inside the container
     networks:
       - backend
-
-  redis:
-    image: redis:latest
-    container_name: redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    networks:
-      - backend
-
-  manager:
-    build:
-      context: ./manager
-      dockerfile: Dockerfile
-    volumes:
-      - ./manager:/app/component_manager
-    container_name: manager
-    ports:
-      - "5000:5000"
-    depends_on:
-      - user-service
-      - news-service
+      
+      # accessors
+  ai:
+    build: ./accessors/ai
+    container_name: ai_container
     environment:
-      - DAPR_HTTP_PORT=3500
+      - GEMINI_API_KEY={GEMINI_API_KEY}
+    ports:
+      - "8082:8082"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "2m"
+        max-file: "2"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     networks:
-      - backend
-    command: ["python", "component_manager.py"]
+      - network-dapr
+
+  dapr_ai:
+    image: daprio/daprd:latest
+    container_name: dapr_ai_container
+    command: [
+      "./daprd",
+      "-app-port", "8082",
+      "-app-id", "ai",
+      "-app-protocol", "http",
+      "-dapr-http-port", "3501",
+      "-resources-path", "./dapr/components",
+      "-config", "./dapr/config.yaml",
+      "-dapr-grpc-port", "50001"
+    ]
+    depends_on:
+      - ai
+    volumes:
+      - ./dapr/:/dapr
+    network_mode: "service:ai"
+
+  message_handler:
+    build: ./accessors/message_handler
+    container_name: message_handler_container
+    ports:
+      - "8084:8084"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "2m"
+        max-file: "2"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - network-dapr
+
+  dapr_message_handler:
+    image: daprio/daprd:latest
+    container_name: dapr_message_handler_container
+
+    command: [
+      "./daprd",
+      "-app-port", "8084",
+      "-app-id", "message_handler",
+      "-app-protocol", "http",
+      "-dapr-http-port", "3502",
+      "-resources-path", "./dapr/components",
+      "-config", "./dapr/config.yaml",
+      "-dapr-grpc-port", "50001"
+    ]
+    depends_on:
+      - message_handler
+    volumes:
+      - ./dapr/:/dapr
+    network_mode: "service:message_handler"
+
+  collector:
+    build: ./accessors/collector 
+    container_name: collector_container
+    environment:
+      - NEWS_API_KEY=${NEWS_API_KEY}  
+    ports:
+      - "8083:8083"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "2m"
+        max-file: "2"
+    depends_on:
+      - rabbitmq
+    networks:
+      - network-dapr
+
+
+  dapr_collector:
+    image: daprio/daprd:latest
+    container_name: dapr_collector_container
+
+    command: [
+      "./daprd",
+      "-app-port", "8083",
+      "-app-id", "collector",
+      "-app-protocol", "http",
+      "-dapr-http-port", "3500",
+      "-resources-path", "./dapr/components",
+      "-config", "./dapr/config.yaml",
+      "-dapr-grpc-port", "50001"
+    ]
+    depends_on:
+      - collector
+    volumes:
+      - ./dapr/:/dapr
+    network_mode: "service:collector"
+
+
+  users_db:
+    build: ./accessors/users_db
+    container_name: users_db_accessor
+    ports:
+      - "8085:8085"
+    depends_on:
+      - rabbitmq
+    networks:
+      - network-dapr
+
+      # Queue
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # Порт для RabbitMQ messaging
+      - "15672:15672"  # Порт для RabbitMQ Management UI
+    networks:
+      - network-dapr
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      RABBITMQ_DEFAULT_USER: guest  # Установить пользователя RabbitMQ
+      RABBITMQ_DEFAULT_PASS: guest  # Установить пароль RabbitMQ
 
 volumes:
   mongodb-data:
@@ -77,4 +188,6 @@ volumes:
 
 networks:
   backend:
+    driver: bridge
+  network-dapr:
     driver: bridge

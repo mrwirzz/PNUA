@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-WORKDIR /ai
+WORKDIR /message_handler
 
 COPY . .
 

@@ -14,19 +14,26 @@ spec:
         policy: exponential
         backoffDuration: "200ms"
         maxRetries: 3
+      aggressive-retry:
+        policy: constant
+        backoffDuration: "100ms"
+        maxRetries: 5
   targets:
     components:
-      news_request_queue:
-        retries: no-retry
-      news_collector:
-        retries: no-retry
+      rabbitmq-binding:
+        retries: limited-retry
+    apps:
+      user-manager:
+        retries: aggressive-retry
+      news-manager:
+        retries: limited-retry
       message_handler:
         retries: no-retry
       ai_summarizer:
         retries: no-retry
-      news_manager:
-        retries: no-retry
-      user_manager:
-        retries: no-retry
+      collector:
+        retries: aggressive-retry
+      users_db:
+        retries: limited-retry
 
 

@@ -8,10 +8,13 @@ spec:
   version: v1
   metadata:
   - name: host
-    value: "amqp://rabbitmq:5672"
+    value: "amqp://rabbitmq:5672"  # Адрес RabbitMQ сервера
   - name: queueName
-    value: "news_request_queue"
+    value: "news_request_queue"  # Имя очереди
   - name: durable
-    value: "false"
-  # - name: autoAck
-  #   value: "true"
+    value: "true"  # Очередь сохраняется после перезапуска
+  - name: autoAck
+    value: "false"  # Ручное подтверждение обработки сообщений
+  - name: prefetchCount
+    value: "10"  # Количество сообщений, обрабатываемых одновременно
+
